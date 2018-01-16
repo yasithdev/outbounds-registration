@@ -1,0 +1,35 @@
+{
+  "name": "outbounds-registration",
+  "version": "1.0.0",
+  "description": "Application to register students into different groups for Outbounds 2018",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "presets": [
+    "env"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yasithmilinda/outbounds-registration.git"
+  },
+  "keywords": [
+    "Outbounds",
+    "Registration"
+  ],
+  "author": "Yasith Jayawardana",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yasithmilinda/outbounds-registration/issues"
+  },
+  "homepage": "https://github.com/yasithmilinda/outbounds-registration#readme",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "mongodb": "^3.0.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1"
+  }
+}
