@@ -1,0 +1,44 @@
+.red {
+	background-color: #FF0000;
+}
+
+.blue {
+	background-color: #0000FF;
+}
+
+.silver {
+	background-color: #C0C0C0;
+}
+
+.yellow {
+	background-color: #FFFF00;
+}
+
+.green {
+	background-color: #008000;
+}
+
+.purple {
+	background-color: #800080;
+}
+
+.orange {
+	background-color: #FFA500;
+}
+
+.brown {
+	background-color: #8B4513;
+}
+
+.black {
+	background-color: #000000;
+}
+
+.pink {
+	background-color: #FFC0CB;
+}
+
+.locked {
+	pointer-events: none;
+	background-color: #EEEEEE;
+}

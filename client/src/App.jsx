@@ -12,32 +12,36 @@ class App extends Component {
 		super(props);
 		this.state = {"groups": [], "status": 0, "selectedGroup" : null};
 
-		// Socket IO streaming
-		var socket = require('socket.io-client')('http://localhost:5000');
-		socket.on('connect', () => {
+		// Configure Message Handling
+		this.socket = require('socket.io-client')('http://localhost:5000');
+		this.socket.on('connect', () => {
 			console.log(`Connection Established`);
 			this.setState({"status": 1});
 		});
-		socket.on('disconnect', () => {
+		this.socket.on('disconnect', () => {
 			console.log(`Connection Closed`);
 			this.setState({"status": 0});
 		});
-		socket.on('group changed', () => {
-			console.log(`Group Change Notified`);
+		this.socket.on('group refresh', () => {
+			console.log(`Group Refresh Notified`);
 			// Get groups from server and update
 			this.updateGroups();
 		});
-		socket.on('group lock', () => {
+		this.socket.on('group lock multiple', (array) => {
+			console.log(`Group Lock Multiple Notified`);
+			// Lock the groups
+			this.refs.groupSelector.lockGroups(array);
+		});
+		this.socket.on('group lock', (id) => {
 			console.log(`Group Lock Notified`);
-			// Update group lock
+			// Lock the group
+			this.refs.groupSelector.lockGroup(id);
 		});
-		socket.on('group unlock', () => {
+		this.socket.on('group unlock', (id) => {
 			console.log(`Group Unlock Notified`);
-			// Update group lock
+			// Unlock the group
+			this.refs.groupSelector.unlockGroup(id);
 		});
-
-		// Get groups from server and update
-		this.updateGroups();
 	}
 
 	updateGroups(){
@@ -76,12 +80,15 @@ class App extends Component {
 
 	handleRequestDetails(event){
 		event.preventDefault();
-		let group = event.target.getAttribute('data-id');
+		// let group = event.target.getAttribute('data-id');
 		// Show a modal dialog with all registered details
 	}
 
 	handleGroupChanged(id){
+		let prevId = this.state.selectedGroup;
+		if (prevId !== null) this.socket.emit('group unlock', prevId);
 		this.setState({"selectedGroup": id});
+		this.socket.emit('group lock', id);
 	}
 
 	handleStudentsChanged(students){

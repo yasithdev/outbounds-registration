@@ -27,6 +27,8 @@ const url = "mongodb://localhost:27017";
 const dbName = "outbounds";
 var db;
 
+var groupLocks = [];
+
 // Initialize connection once
 MongoClient.connect(url, function(error, client) {
 	assert.equal(null, error);
@@ -51,6 +53,7 @@ app.get('/api/groups', function(request, response) {
 			assert.equal(null, e);
 			groups = groups.map((group) => ({
 				"_id": group._id, 
+				"color": group.color,
 				"count": (counts.filter((e) => e._id === group._id).map((x) => x.count)[0] || 0)
 			}))
 			console.log(groups);
@@ -94,18 +97,33 @@ app.post('/api/students', function(request, response) {
 
 io.on('connection', function(socket){
 	console.log('a user connected');
+	
+	// Notify user to update its groups
+	socket.emit('group refresh');
+	
+	// Notify the current locks to user
+	socket.emit('group lock multiple', groupLocks.map((e) => e.data));
 
 	socket.on('disconnect', function(){
 		console.log('user disconnected');
+		var filtered = groupLocks.filter((e) => e.id !== socket.id);
+		var toRemove = groupLocks.filter((e) => e.id === socket.id);
+		groupLocks = filtered;
+		// Notify all users except sender to unlock the sender's lock
+		if(toRemove.length == 1) socket.broadcast.emit('group unlock', toRemove[0].data);
 	});
 
 	socket.on('group lock', function(data){
-		// Notify all users of group lock
-		io.emit('group lock', data);
+		// Add lock to groupLocks
+		groupLocks.push({id: socket.id, data: data});
+		// Notify all users of group lock except sender
+		socket.broadcast.emit('group lock', data);
 	});
 
 	socket.on('group unlock', function(data){
-		// Notify all users of group unlock
-		io.emit('group unlock', data);
+		// Remove lock from groupLocks
+		groupLocks = groupLocks.filter((e) => e.data !== data);
+		// Notify all users of group unlock except sender
+		socket.broadcast.emit('group unlock', data);
 	});
 });
