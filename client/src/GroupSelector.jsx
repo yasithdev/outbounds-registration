@@ -14,11 +14,23 @@ class GroupSelector extends Component {
 		if (lockedGroups.indexOf(id) === -1) {
 			lockedGroups.push(id);
 			this.setState({"lockedGroups": lockedGroups});
+			if (this.state.selectedGroup === id){
+				this.setState({"selectedGroup" : null});
+				return false;
+			}
+			return true;
 		}
 	}
 
 	lockGroups(array) {
 		this.setState({"lockedGroups": array});
+		if (this.state.selectedGroup !== null){
+			if (array.indexOf(this.state.selectedGroup) !== -1){
+				this.setState({"selectedGroup" : null});
+				return false;
+			}
+			return true;
+		}
 	}
 
 	unlockGroup(id){
