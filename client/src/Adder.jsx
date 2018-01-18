@@ -57,11 +57,9 @@ class Adder extends Component {
 						<div className="col-4">
 							<input type="text" className="form-control" id="idInput" ref="idInput" placeholder="Index No" style={{"textTransform": "capitalize"}} required/>
 						</div>
-						<div className="col-7">
+						<div className="col-8">
 							<input type="text" className="form-control" id="nameInput" ref="nameInput" placeholder="Name" style={{"textTransform": "capitalize"}} required/>
-						</div>
-						<div className="col-1">
-							<button className="btn btn-outline" type="submit">+</button>
+							<button type="submit" className="sr-only"/>
 						</div>
 					</div>
 				</form>
@@ -74,7 +72,7 @@ class Adder extends Component {
 									<li key={student.name} className="list-group-item d-flex justify-content-between">
 									{student.name}
 									&nbsp;&nbsp;&nbsp;&nbsp;
-									<button data-name={student.name} type="button" className="btn btn-warning badge badge-warning" onClick={this.handleRemove.bind(this)}>Remove</button>
+									<button data-name={student.name} type="button" className="btn btn-danger badge badge-danger" onClick={this.handleRemove.bind(this)}>x</button>
 									</li>
 									)
 								)}
