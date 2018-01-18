@@ -18,11 +18,7 @@ class GroupSelector extends Component {
 	}
 
 	lockGroups(array) {
-		let lockedGroups = this.state.lockedGroups;
-		array.forEach((id, index) => {
-			if (lockedGroups.indexOf(id) === -1) lockedGroups.push(id);
-		});
-		this.setState({"lockedGroups": lockedGroups});
+		this.setState({"lockedGroups": array});
 	}
 
 	unlockGroup(id){

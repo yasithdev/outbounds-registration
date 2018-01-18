@@ -16,10 +16,12 @@ class App extends Component {
 		this.socket = require('socket.io-client')('http://localhost:5000');
 		this.socket.on('connect', () => {
 			console.log(`Connection Established`);
+			this.refs.groupSelector.setState({"selectedGroup" : null});
 			this.setState({"status": 1});
 		});
 		this.socket.on('disconnect', () => {
 			console.log(`Connection Closed`);
+			this.refs.groupSelector.setState({"selectedGroup" : null});
 			this.setState({"status": 0});
 		});
 		this.socket.on('group refresh', () => {

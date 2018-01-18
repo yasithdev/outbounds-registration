@@ -91,9 +91,12 @@ app.post('/api/students', function(request, response) {
 		response.json({"message": message});
 
 		// Send update notification to all listening connections
-		io.emit('group changed', {});
+		io.emit('group refresh', {});
 	});
 });
+
+io.set('heartbeat timeout', 5000);
+io.set('heartbeat interval', 2000);
 
 io.on('connection', function(socket){
 	console.log('a user connected');
