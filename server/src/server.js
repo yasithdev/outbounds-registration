@@ -110,14 +110,31 @@ app.post('/api/groups', function(request, response) {
 	}
 });
 
+// Members data end point
+app.get('/api/members', function(request, response) {
+	let err = null, res = null, stc = OK;
+
+	db.collection("members").find().toArray(function(error, result) {
+		err = error;
+		res = {members: result};
+
+		console.log(result);
+
+		if (err) stc = SERVICE_UNAVAILABLE;
+
+		setResponse(request, response, stc, err, res);
+	})
+});
+
+
 app.get('/api/members/:id', function(request, response) {
 	let err = null, res = null, stc = OK;
 
 	db.collection("members").findOne({_id: request.params["id"]}, function(error, result) {
 		err = error;
-		res = result;
+		res = {member:result};
 
-		if (err) stc = NOT_FOUND;
+		if (err) stc = SERVICE_UNAVAILABLE;
 
 		setResponse(request, response, stc, err, res);
 	})
