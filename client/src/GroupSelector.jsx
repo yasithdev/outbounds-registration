@@ -52,7 +52,7 @@ class GroupSelector extends Component {
 	render() {
 		return (
 			<ul className="list-group">
-			{this.props.groups.map((group) => (<Group key={group._id} group={group} active={group._id === this.state.selectedGroup} locked={this.state.lockedGroups.indexOf(group._id) !== -1} onClick={this.handleClick.bind(this)} onDoubleClick={this.props.onRequestDetails.bind(this)}/>))}
+			{this.props.groups.map((group) => (<Group key={group._id} group={group} active={group._id === this.state.selectedGroup} locked={this.state.lockedGroups.indexOf(group._id) !== -1} onClick={this.handleClick.bind(this)}/>))}
 			</ul>
 			);
 	}

@@ -12,6 +12,11 @@ const server = require('http').createServer(app);
 const io = socketio(server);
 const appPort = 5000;
 
+// HTTP Status Codes
+const BAD_REQUEST = 400;
+const SERVICE_UNAVAILABLE = 503;
+const OK = 200;
+
 // Tell express to use the body-parser middleware for JSON
 app.use(bodyParser.json());
 
@@ -22,77 +27,110 @@ app.use(function(req, res, next) {
 	next();
 });
 
-const MongoClient = require('mongodb').MongoClient;
-const url = "mongodb://localhost:27017";
-const dbName = "outbounds";
-var db;
+// MongoDB Connection
+const mongoClient = require('mongodb').MongoClient;
+const mongoUrl = "mongodb://localhost:27017";
+const mongoDbName = "outbounds";
 
-var groupLocks = [];
-
-// Initialize connection once
-MongoClient.connect(url, function(error, client) {
+// Connect to MongoDB Instance
+mongoClient.connect(mongoUrl, function(error, client) {
 	assert.equal(null, error);
-	db = client.db(dbName);
+	db = client.db(mongoDbName);
 	assert.notEqual(null, db);
-
-	// Start the application server after the database connection is ready
+	// Start the App Server
 	server.listen(appPort, () => console.log(`Server started on Port ${appPort}`));
 });
 
+// State variables
+var db;
+var groupLocks = [];
+
+// Response function
+var setResponse = function(request, response, stc, err, res) {
+	console.log(`[${request.method}] ${request.path} - ${stc}`);
+	response.status(stc);
+	response.json({"error": err, "result": res});
+};
+
 // Endpoint - Get all groups
 app.get('/api/groups', function(request, response) {
-	console.log(`Groups Requested`);
-
+	// Response Variables ----------
+	let err = null, res = null, stc = OK;
+	// Process ---------------------
 	// Get all group counts from db
 	db.collection("students").aggregate([{ $group: {_id: "$group_id", count: {$sum: 1} } }]).toArray(function(error, counts) {
-		assert.equal(null, error);
-		console.log(counts);
-		
-		// Do a left join equivalent and update the response with the result
-		db.collection("groups").find({}).toArray((e, groups) => {
-			assert.equal(null, e);
-			groups = groups.map((group) => ({
-				"_id": group._id, 
-				"color": group.color,
-				"count": (counts.filter((e) => e._id === group._id).map((x) => x.count)[0] || 0)
-			}))
-			console.log(groups);
-			response.json({"groups": groups});
-		});
+		err = error;
+		if (err) {
+			stc = SERVICE_UNAVAILABLE;
+			setResponse(request, response, stc, err, res);
+		}
+		else {
+			// Do a left join equivalent and update the response with the result
+			db.collection("groups").find({}).toArray((e, groups) => {
+				err = error;
+				if (err) {
+					stc = SERVICE_UNAVAILABLE;
+					setResponse(request, response, stc, err, res);
+				}
+				else {
+					groups = groups.map((group) => ({
+						"_id": group._id, 
+						"color": group.color,
+						"count": (counts.filter((e) => e._id === group._id).map((x) => x.count)[0] || 0)
+					}));
+					res = {"groups" : groups};
+					setResponse(request, response, stc, err, res);
+				}
+			});
+		}
 	});
 });
 
 // Endpoint - Add new group
 app.post('/api/groups', function(request, response) {
-	console.log(`Add new Group Requested`);
-	
-	// Add new group to db
-	let name = request.body.name;
-	let color = request.body.color;
-	db.collection("groups").insertOne({'_id': name, 'color': color}, function(error, result) {
-		assert.equal(null, error);
-		let message = `Inserted group "${name}"`;
-		console.log(message);
-		response.json({"message": message});
-	});
+	let groups = request.body.groups.map((group) => ({'_id': group.name, 'color': group.color}));
+	let name = request.body.name || "";
+	let color = request.body.color || "";
+	// Response Variables ----------
+	let err = null, res = null, stc = OK;
+	// Process ---------------------
+	if(groups.length == 0 ||name === "" || color === "") {
+		stc = BAD_REQUEST;
+		err = "Request not in proper JSON format";
+		setResponse(request, response, stc, err, res);
+	}
+	else {
+		db.collection("groups").insert(groups, function(error, result) {
+			err = error;
+			res = result;
+			if(err) stc = SERVICE_UNAVAILABLE;
+			setResponse(request, response, stc, err, res);
+		});
+	}
 });
 
 // Endpoint - Add new student with group
 app.post('/api/students', function(request, response) {
-	console.log(`Add students with groups`);
-	
-	// Add new students to db
-	let students = request.body.students;
-	console.log(students);
-	db.collection("students").insert(students, function(error, result) {
-		assert.equal(null, error);
-		let message = `Added students to group"`;
-		console.log(message);
-		response.json({"message": message});
-
-		// Send update notification to all listening connections
-		io.emit('group refresh', {});
-	});
+	let group = request.body.group || "";
+	let students = request.body.students || [];
+	// Response Variables ----------
+	let err = null, res = null, stc = OK;
+	// Process ---------------------
+	if(group === "" || students.length === 0) {
+		stc = BAD_REQUEST;
+		err = "Request not in proper JSON format";
+		setResponse(request, response, stc, err, res);
+	}
+	else {
+		students = students.map((student) => ({"_id": student.id, "name": student.name, "group_id": group}));
+		db.collection("students").insert(students, function(error, result) {
+			err = error;
+			res = {"students": result};
+			if(err) stc = SERVICE_UNAVAILABLE;
+			setResponse(request, response, stc, err, res);
+			io.emit('group refresh', {});
+		});
+	}
 });
 
 io.set('heartbeat timeout', 5000);
@@ -100,13 +138,11 @@ io.set('heartbeat interval', 2000);
 
 io.on('connection', function(socket){
 	console.log('a user connected');
-	
 	// Notify user to update its groups
 	socket.emit('group refresh');
-	
 	// Notify the current locks to user
 	socket.emit('group lock multiple', groupLocks.map((e) => e.data));
-
+	// Notify other users to unlock groups when a user disconnects
 	socket.on('disconnect', function(){
 		console.log('user disconnected');
 		var filtered = groupLocks.filter((e) => e.id !== socket.id);
