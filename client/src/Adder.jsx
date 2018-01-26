@@ -1,6 +1,4 @@
 import React, { Component } from 'react';
-import {Typeahead} from 'react-bootstrap-typeahead';
-
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 
 
@@ -397,49 +395,41 @@ class Adder extends Component {
             selectedFood: "NON_VEG"
         };
 
-
     }
 
 
     handleAdd(event){
 
-        if (!event.length){
+        if (["Shift", "Backspace", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)){
             return;
         }
 
-        let studentId = event[0].ID;
-        let studentName = this.state.studentList[studentId].trim();
 
-        // Check if student name already exists
-        let isNotAlreadyExisting = this.state.students.filter(x => x.name === studentName).length === 0;
+        let re = RegExp("[0-9]{6}[A-Z]");
 
-        if(isNotAlreadyExisting){
-            let students = this.state.students;
-
-            students.push({
-                "id": studentId,
-                "name": studentName,
-                "food": this.state.selectedFood
-            });
-
-            this.props.onStudentsChanged(students);
-            this.setState({
-                "students": students,
-                "current_id": studentId
-            });
-
-            this._typeahead.getInstance().clear();
-
-
-        } else {
-            alert("Name already exists!");
+        if (!re.test(event.target.value)){
+            return;
         }
+
+        let studentId = event.target.value;
+
+        if (this.state.studentList.hasOwnProperty(studentId)){
+            this.refs.nameInput.value = this.state.studentList[studentId].trim();;
+
+        }
+
+        this.setState({
+            current_id: studentId
+        });
+
+        this.refs.nameInput.focus();
+        this.refs.nameInput.select();
+
     }
 
     reset() {
         this.props.onStudentsChanged([]);
         this.setState({"students": []});
-        this._typeahead.getInstance().clear();
     }
 
     handleRemove(event){
@@ -476,6 +466,12 @@ class Adder extends Component {
                 this.setState({
                     "students": students,
                 });
+
+
+                this.refs.nameInput.value = "";
+                this.refs.idInput.value = "";
+                this.refs.idInput.focus();
+
             }
         }
 
@@ -505,18 +501,20 @@ class Adder extends Component {
 
         return (
             <div>
-                <form onSubmit={this.handleAdd.bind(this)}>
+                <form>
                     <div className="form-row">
                         <div className="col-4">
-                            {/*<input type="text" className="form-control" id="idInput" ref="idInput" placeholder="Index No" style={{"textTransform": "capitalize"}} required/>*/}
-                            <Typeahead
-                                ref={(ref) => this._typeahead = ref}
-                                className="input-sm"
-                                labelKey="ID"
-                                options={this.state.dataSource}
+                            <input
+                                type="text"
+                                className="form-control"
+                                id="idInput"
+                                ref="idInput"
                                 placeholder="Index No."
-                                onChange={this.handleAdd.bind(this)}
-                            />
+                                style={{"textTransform": "capitalize"}}
+                                onKeyUp={this.handleAdd.bind(this)}
+                                required />
+
+
                         </div>
                         <div className="col-4">
                             <input
