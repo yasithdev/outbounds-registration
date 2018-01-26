@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import {Typeahead} from 'react-bootstrap-typeahead';
-
 import 'react-bootstrap-typeahead/css/Typeahead.css';
+
+import Keypress from "react-keypress";
 
 
 // Adder component - represents the component that adds students to a list
@@ -397,49 +397,36 @@ class Adder extends Component {
             selectedFood: "NON_VEG"
         };
 
-
     }
 
 
     handleAdd(event){
 
-        if (!event.length){
+        let re = RegExp("[0-9]{6}[A-Z]");
+
+        if (!re.test(event.target.value)){
             return;
         }
 
-        let studentId = event[0].ID;
-        let studentName = this.state.studentList[studentId].trim();
+        let studentId = event.target.value;
 
-        // Check if student name already exists
-        let isNotAlreadyExisting = this.state.students.filter(x => x.name === studentName).length === 0;
+        if (this.state.studentList.hasOwnProperty(studentId)){
+            this.refs.nameInput.value = this.state.studentList[studentId].trim();;
 
-        if(isNotAlreadyExisting){
-            let students = this.state.students;
-
-            students.push({
-                "id": studentId,
-                "name": studentName,
-                "food": this.state.selectedFood
-            });
-
-            this.props.onStudentsChanged(students);
-            this.setState({
-                "students": students,
-                "current_id": studentId
-            });
-
-            this._typeahead.getInstance().clear();
-
-
-        } else {
-            alert("Name already exists!");
         }
+
+        this.setState({
+            current_id: studentId
+        });
+
+        this.refs.nameInput.focus();
+        this.refs.nameInput.select();
+
     }
 
     reset() {
         this.props.onStudentsChanged([]);
         this.setState({"students": []});
-        this._typeahead.getInstance().clear();
     }
 
     handleRemove(event){
@@ -452,31 +439,35 @@ class Adder extends Component {
 
     handleNewNameEntry(event){
 
-        if (event.keyCode === 13){
-            if (event.target.value.length > 0){
+        if (event.target.value.length > 0){
 
-                let studentId = this.state.current_id;
+            let studentId = this.state.current_id;
 
-                let alreadyExisting = this.state.students.filter(x => x.id === studentId).length;
+            let alreadyExisting = this.state.students.filter(x => x.id === studentId).length;
 
-                if (alreadyExisting){
-                    alert("Already entered that student ID!");
-                    return;
-                }
-
-                let studentName = event.target.value.trim();
-
-                let students = this.state.students;
-                students.push({
-                    "id": studentId,
-                    "name": studentName,
-                    "food": this.state.selectedFood
-                });
-                this.props.onStudentsChanged(students);
-                this.setState({
-                    "students": students,
-                });
+            if (alreadyExisting){
+                alert("Already entered that student ID!");
+                return;
             }
+
+            let studentName = event.target.value.trim();
+
+            let students = this.state.students;
+            students.push({
+                "id": studentId,
+                "name": studentName,
+                "food": this.state.selectedFood
+            });
+            this.props.onStudentsChanged(students);
+            this.setState({
+                "students": students,
+            });
+
+
+            this.refs.nameInput.value = "";
+            this.refs.idInput.value = "";
+            this.refs.idInput.focus();
+
         }
 
     }
@@ -499,24 +490,31 @@ class Adder extends Component {
         })
     }
 
+    onCtrlEnter(){
+        console.log("Ctrl enter");
+        // this.props.onSubmit();
+    }
+
 
 
     render() {
 
         return (
             <div>
-                <form onSubmit={this.handleAdd.bind(this)}>
+                <form>
                     <div className="form-row">
                         <div className="col-4">
-                            {/*<input type="text" className="form-control" id="idInput" ref="idInput" placeholder="Index No" style={{"textTransform": "capitalize"}} required/>*/}
-                            <Typeahead
-                                ref={(ref) => this._typeahead = ref}
-                                className="input-sm"
-                                labelKey="ID"
-                                options={this.state.dataSource}
+                            <input
+                                type="text"
+                                className="form-control"
+                                id="idInput"
+                                ref="idInput"
                                 placeholder="Index No."
+                                style={{"textTransform": "capitalize"}}
                                 onChange={this.handleAdd.bind(this)}
-                            />
+                                required />
+
+
                         </div>
                         <div className="col-4">
                             <input
@@ -526,14 +524,17 @@ class Adder extends Component {
                                 ref="nameInput"
                                 placeholder="Name"
                                 style={{"textTransform": "capitalize"}}
-                                onKeyUp={this.handleNewNameEntry.bind(this)}
+                                onChange={this.handleNewNameEntry.bind(this)}
+                                onKeyPress={this.onCtrlEnter}
                                 required/>
                         </div>
                         <div className="col-4">
                             <label>
                                 <input type="radio" name="food" value="VEG"
                                        checked={this.state.selectedFood === "VEG"}
-                                       onChange={this.handleFoodChange.bind(this)}/>
+                                       onChange={this.handleFoodChange.bind(this)}
+
+                                />
                                 Veg
                             </label>
                             <br/>
