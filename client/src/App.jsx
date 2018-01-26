@@ -154,7 +154,7 @@ class App extends Component {
                                     <div className="col-6">Non-Veg: {this.state.NON_VEG}</div>
                                 </div>
                                 <br/>
-                                <a href="/view" target="_blank">View all groups</a>
+                                <a href="/view.html" target="_blank">View all groups</a>
                             </div>
                         </div>
                     </div>
