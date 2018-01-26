@@ -393,7 +393,8 @@ class Adder extends Component {
                 {"ID":"160719T","Name":"WISHWAJITH L.H.T.K."},
                 {"ID":"160723B","Name":"ZAID M.J.U."}],
             "studentList": {},
-            current_id: null
+            current_id: null,
+            selectedFood: "NON_VEG"
         };
 
 
@@ -414,7 +415,13 @@ class Adder extends Component {
 
         if(isNotAlreadyExisting){
             let students = this.state.students;
-            students.push({"id": studentId, "name": studentName});
+
+            students.push({
+                "id": studentId,
+                "name": studentName,
+                "food": this.state.selectedFood
+            });
+
             this.props.onStudentsChanged(students);
             this.setState({
                 "students": students,
@@ -450,7 +457,7 @@ class Adder extends Component {
 
                 let studentId = this.state.current_id;
 
-                let alreadyExisting = this.state.students.filter(x => x.id === studentId).length !== 0;
+                let alreadyExisting = this.state.students.filter(x => x.id === studentId).length;
 
                 if (alreadyExisting){
                     alert("Already entered that student ID!");
@@ -460,7 +467,11 @@ class Adder extends Component {
                 let studentName = event.target.value.trim();
 
                 let students = this.state.students;
-                students.push({"id": studentId, "name": studentName});
+                students.push({
+                    "id": studentId,
+                    "name": studentName,
+                    "food": this.state.selectedFood
+                });
                 this.props.onStudentsChanged(students);
                 this.setState({
                     "students": students,
@@ -470,12 +481,18 @@ class Adder extends Component {
 
     }
 
+    handleFoodChange(event){
+        this.setState({
+            selectedFood: event.target.value
+        })
+    }
+
     componentDidMount(){
         let tmp = {};
 
         this.state.dataSource.forEach((student) => {
-                tmp[student["ID"]] = student["Name"].trim();
-            });
+            tmp[student["ID"]] = student["Name"].trim();
+        });
 
         this.setState({
             "studentList": tmp
@@ -501,7 +518,7 @@ class Adder extends Component {
                                 onChange={this.handleAdd.bind(this)}
                             />
                         </div>
-                        <div className="col-8">
+                        <div className="col-4">
                             <input
                                 type="text"
                                 className="form-control"
@@ -511,6 +528,21 @@ class Adder extends Component {
                                 style={{"textTransform": "capitalize"}}
                                 onKeyUp={this.handleNewNameEntry.bind(this)}
                                 required/>
+                        </div>
+                        <div className="col-4">
+                            <label>
+                                <input type="radio" name="food" value="VEG"
+                                       checked={this.state.selectedFood === "VEG"}
+                                       onChange={this.handleFoodChange.bind(this)}/>
+                                Veg
+                            </label>
+                            <br/>
+                            <label>
+                                <input type="radio" name="food" value="NON_VEG"
+                                       label="Non-veg" checked={this.state.selectedFood === "NON_VEG"}
+                                       onChange={this.handleFoodChange.bind(this)}/>
+                                Non-veg
+                            </label>
                         </div>
                     </div>
                 </form>

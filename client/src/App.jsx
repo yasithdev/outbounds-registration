@@ -11,7 +11,10 @@ class App extends Component {
     constructor(props){
         super(props);
         this.serverAddress = "http://localhost:5000";
-        this.state = {"groups": [], "status": 0, "selectedGroup" : null};
+        this.state = {
+            "groups": [],
+            "status": 0,
+            "selectedGroup" : null};
 
         // Configure Message Handling
         this.socket = require('socket.io-client')(this.serverAddress);
@@ -31,6 +34,7 @@ class App extends Component {
         this.socket.on('group refresh', () => {
             console.log(`Group Refresh Notified`);
             this.updateGroups();
+            this.updateFoodPrefs();
         });
         // On group lock init
         this.socket.on('group lock multiple', (array) => {
@@ -56,7 +60,29 @@ class App extends Component {
                 // Check status code and take action
                 if (response.statusCode === 200){
                     let result = JSON.parse(body).result.groups;
-                    this.setState({"groups": result});
+                    this.setState({
+                        "groups": result
+                    });
+                } else {
+                    console.log(`Error: ${body.error}`);
+                }
+            }
+            else if (error) console.log(`Error: ${error}`);
+        });
+    }
+
+
+    updateFoodPrefs(){
+        Request(`${this.serverAddress}/api/food`, (error, response, body) => {
+            if (response) {
+                console.log(`Status: ${response.statusCode}`);
+                // Check status code and take action
+                if (response.statusCode === 200){
+                    let result = JSON.parse(body);
+                    this.setState({
+                        VEG: result.VEG,
+                        NON_VEG: result.NON_VEG
+                    })
                 } else {
                     console.log(`Error: ${body.error}`);
                 }
@@ -104,35 +130,47 @@ class App extends Component {
 
     render() {
         return (
-			<div className="container">
-				<div className="jumbotron text-center">
-					<h1>Valianz 2018</h1>
-					<h2>Registration</h2>
-				</div>
-				<div className="row">
-					<div className="col-7">
-						<div className="card">
-							<div className="card-header"><h5><strong>Add Students</strong></h5></div>
-							<div className="card-body">
-								<Adder ref="adder" onSubmit={this.handleSubmit.bind(this)}
+            <div className="container">
+                <div className="jumbotron text-center">
+                    <h1>Valianz 2018</h1>
+                    <h2>Registration</h2>
+                </div>
+                <div className="row">
+                    <div className="col-7">
+                        <div className="card">
+                            <div className="card-header"><h5><strong>Add Students</strong></h5></div>
+                            <div className="card-body">
+                                <Adder ref="adder" onSubmit={this.handleSubmit.bind(this)}
                                        submitEnabled={this.state.selectedGroup !== null}
                                        onStudentsChanged={this.handleStudentsChanged.bind(this)}/>
-							</div>
-						</div>
-					</div>
-					<div className="col-5">
-						<div className="card">
-							<div className="card-header d-flex justify-content-between align-items-center">
-								<h5><strong>Groups</strong></h5>
-								<span className={`badge badge-pill badge-${this.state.status ? "success" : "danger"}`}>&nbsp;</span>
-							</div>
-							<div className="card-body">
-								<GroupSelector ref="groupSelector" groups={this.state.groups} onGroupChanged={this.handleGroupChanged.bind(this)}/>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+                            </div>
+                        </div>
+
+                        <div className="card" style={{marginTop: '25px'}}>
+                            <div className="card-header"><h5><strong>Summary</strong></h5></div>
+                            <div className="card-body">
+                                <div className="row">
+                                    <div className="col-6">Veg: {this.state.VEG}</div>
+                                    <div className="col-6">Non-Veg: {this.state.NON_VEG}</div>
+                                </div>
+                                <br/>
+                                <a href="/view" target="_blank">View all groups</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-5">
+                        <div className="card">
+                            <div className="card-header d-flex justify-content-between align-items-center">
+                                <h5><strong>Groups</strong></h5>
+                                <span className={`badge badge-pill badge-${this.state.status ? "success" : "danger"}`}>&nbsp;</span>
+                            </div>
+                            <div className="card-body">
+                                <GroupSelector ref="groupSelector" groups={this.state.groups} onGroupChanged={this.handleGroupChanged.bind(this)}/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         );
     }
 }

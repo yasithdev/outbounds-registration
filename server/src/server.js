@@ -52,7 +52,7 @@ var setResponse = function(request, response, stc, err, res) {
     response.json({"error": err, "result": res});
 };
 
-// Endpoint - Get all groups
+// Endpoint - Get all groups counts
 app.get('/api/groups', function(request, response) {
     // Response Variables ----------
     let err = null, res = null, stc = OK;
@@ -85,6 +85,16 @@ app.get('/api/groups', function(request, response) {
         }
     });
 });
+
+// get all group members
+app.get('/api/groups/all', (request, response) => {
+    let students = db.collection('students').find({}).toArray((error, result)=>{
+        response.status(200).json(result);
+    });
+
+
+});
+
 
 // Endpoint - Add new group
 app.post('/api/groups', function(request, response) {
@@ -126,9 +136,11 @@ app.post('/api/students', function(request, response) {
             return {
                 "_id": student.id,
 				"name": student.name,
-				"group_id": group
+				"group_id": group,
+                "food": student.food
             };
         });
+
         db.collection("students").insert(students, function(error, result) {
             err = error;
             res = {"students": result};
@@ -137,6 +149,38 @@ app.post('/api/students', function(request, response) {
             io.emit('group refresh', {});
         });
     }
+});
+
+
+app.get('/api/food', function(request, response) {
+
+    let foodCounts = {};
+
+    db.collection("students", function(error, collection){
+        collection.count({food: "NON_VEG"}, (error, count) => {
+            foodCounts.NON_VEG = count;
+            console.log("NON_VEG", count);
+
+            collection.count({food: "VEG"}, (error, count) => {
+                foodCounts.VEG = count;
+                console.log("VEG", count);
+
+                console.log(foodCounts);
+
+                response.status(200).json(foodCounts)
+            });
+        });
+
+
+
+
+
+
+
+    });
+
+
+
 });
 
 io.set('heartbeat timeout', 5000);
