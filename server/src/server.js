@@ -14,6 +14,7 @@ const appPort = 5000;
 
 // HTTP Status Codes
 const BAD_REQUEST = 400;
+const NOT_FOUND = 404;
 const SERVICE_UNAVAILABLE = 503;
 const OK = 200;
 
@@ -117,6 +118,36 @@ app.post('/api/groups', function(request, response) {
             setResponse(request, response, stc, err, res);
         });
     }
+});
+
+// Members data end point
+app.get('/api/members', function(request, response) {
+	let err = null, res = null, stc = OK;
+
+	db.collection("members").find().toArray(function(error, result) {
+		err = error;
+		res = {members: result};
+
+		console.log(result);
+
+		if (err) stc = SERVICE_UNAVAILABLE;
+
+		setResponse(request, response, stc, err, res);
+	})
+});
+
+
+app.get('/api/members/:id', function(request, response) {
+	let err = null, res = null, stc = OK;
+
+	db.collection("members").findOne({_id: request.params["id"]}, function(error, result) {
+		err = error;
+		res = {member:result};
+
+		if (err) stc = SERVICE_UNAVAILABLE;
+
+		setResponse(request, response, stc, err, res);
+	})
 });
 
 // Endpoint - Add new student with group
