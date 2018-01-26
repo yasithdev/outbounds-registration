@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 
-import Keypress from "react-keypress";
-
 
 // Adder component - represents the component that adds students to a list
 class Adder extends Component {
@@ -402,6 +400,11 @@ class Adder extends Component {
 
     handleAdd(event){
 
+        if (["Shift", "Backspace", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)){
+            return;
+        }
+
+
         let re = RegExp("[0-9]{6}[A-Z]");
 
         if (!re.test(event.target.value)){
@@ -439,35 +442,37 @@ class Adder extends Component {
 
     handleNewNameEntry(event){
 
-        if (event.target.value.length > 0){
+        if (event.keyCode === 13){
+            if (event.target.value.length > 0){
 
-            let studentId = this.state.current_id;
+                let studentId = this.state.current_id;
 
-            let alreadyExisting = this.state.students.filter(x => x.id === studentId).length;
+                let alreadyExisting = this.state.students.filter(x => x.id === studentId).length;
 
-            if (alreadyExisting){
-                alert("Already entered that student ID!");
-                return;
+                if (alreadyExisting){
+                    alert("Already entered that student ID!");
+                    return;
+                }
+
+                let studentName = event.target.value.trim();
+
+                let students = this.state.students;
+                students.push({
+                    "id": studentId,
+                    "name": studentName,
+                    "food": this.state.selectedFood
+                });
+                this.props.onStudentsChanged(students);
+                this.setState({
+                    "students": students,
+                });
+
+
+                this.refs.nameInput.value = "";
+                this.refs.idInput.value = "";
+                this.refs.idInput.focus();
+
             }
-
-            let studentName = event.target.value.trim();
-
-            let students = this.state.students;
-            students.push({
-                "id": studentId,
-                "name": studentName,
-                "food": this.state.selectedFood
-            });
-            this.props.onStudentsChanged(students);
-            this.setState({
-                "students": students,
-            });
-
-
-            this.refs.nameInput.value = "";
-            this.refs.idInput.value = "";
-            this.refs.idInput.focus();
-
         }
 
     }
@@ -490,11 +495,6 @@ class Adder extends Component {
         })
     }
 
-    onCtrlEnter(){
-        console.log("Ctrl enter");
-        // this.props.onSubmit();
-    }
-
 
 
     render() {
@@ -511,7 +511,7 @@ class Adder extends Component {
                                 ref="idInput"
                                 placeholder="Index No."
                                 style={{"textTransform": "capitalize"}}
-                                onChange={this.handleAdd.bind(this)}
+                                onKeyUp={this.handleAdd.bind(this)}
                                 required />
 
 
@@ -524,17 +524,14 @@ class Adder extends Component {
                                 ref="nameInput"
                                 placeholder="Name"
                                 style={{"textTransform": "capitalize"}}
-                                onChange={this.handleNewNameEntry.bind(this)}
-                                onKeyPress={this.onCtrlEnter}
+                                onKeyUp={this.handleNewNameEntry.bind(this)}
                                 required/>
                         </div>
                         <div className="col-4">
                             <label>
                                 <input type="radio" name="food" value="VEG"
                                        checked={this.state.selectedFood === "VEG"}
-                                       onChange={this.handleFoodChange.bind(this)}
-
-                                />
+                                       onChange={this.handleFoodChange.bind(this)}/>
                                 Veg
                             </label>
                             <br/>
