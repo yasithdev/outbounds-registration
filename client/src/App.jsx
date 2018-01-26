@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 
 import Adder from './Adder.jsx';
+import DataViewer from './DataViewer';
 import GroupSelector from './GroupSelector.jsx';
 import Request from 'request';
 
@@ -14,7 +15,9 @@ class App extends Component {
         this.state = {
             "groups": [],
             "status": 0,
-            "selectedGroup" : null};
+            "selectedGroup" : null,
+            showGroupInfo: false
+        };
 
         // Configure Message Handling
         this.socket = require('socket.io-client')(this.serverAddress);
@@ -154,7 +157,7 @@ class App extends Component {
                                     <div className="col-6">Non-Veg: {this.state.NON_VEG}</div>
                                 </div>
                                 <br/>
-                                <a href="/view.html" target="_blank">View all groups</a>
+                                <button onClick={()=>{this.setState({showGroupInfo: !this.state.showGroupInfo})}}>{this.state.showGroupInfo ? "Hide" : "Show"} Group Details</button>
                             </div>
                         </div>
                     </div>
@@ -169,6 +172,10 @@ class App extends Component {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div className="row">
+                    {this.state.showGroupInfo ? <DataViewer/> : null }
                 </div>
             </div>
         );
