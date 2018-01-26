@@ -15,7 +15,7 @@ class AppWithRoutes extends Component{
         return(<Router>
             <div>
                 <Route exact path="/" component={App}/>
-                <Route exact path="/view.html   " component={DataViewer}/>
+                <Route exact path="/view" component={DataViewer}/>
             </div>
         </Router>);
     }
